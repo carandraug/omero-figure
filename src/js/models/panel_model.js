@@ -290,7 +290,6 @@
         },
 
         create_labels_from_time: function(options) {
-            
             this.add_labels([{
                     'time': options.format,
                     'size': options.size,

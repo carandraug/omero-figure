@@ -40,7 +40,7 @@
                 this.ctv.clear().remove();
             }
             if (selected.length > 0) {
-                this.ctv = new ChannelToggleView({models: selected});
+                this.ctv = new TransformationsView({models: selected});
                 $("#channelToggle").empty().append(this.ctv.render().el);
             }
             if (this.csv) {
@@ -1221,7 +1221,7 @@
                 sizeT = this.models.getIfEqual('sizeT'),
                 deltaT = this.models.getDeltaTIfEqual(),
                 z_projection = this.models.allTrue('z_projection');
-            
+
             this.theT_avg = theT;
 
             if (wh <= 1) {
@@ -1232,7 +1232,7 @@
                 frame_h = this.full_size / wh;
             }
 
-            // Now get img src & positioning css for each panel, 
+            // Now get img src & positioning css for each panel,
             this.models.forEach(function(m){
                 var src = m.get_img_src(),
                     img_css = m.get_vp_img_css(m.get('zoom'), frame_w, frame_h, m.get('dx'), m.get('dy'));
@@ -1492,23 +1492,22 @@
         }
     });
 
-    // Coloured Buttons to Toggle Channels on/off.
-    var ChannelToggleView = Backbone.View.extend({
+    // Buttons for transforming the image: rotation, z projection, and
+    // flipping.
+    var TransformationsView = Backbone.View.extend({
         tagName: "div",
-        template: JST["src/templates/channel_toggle_template.html"],
+        template: JST["src/templates/transformations_template.html"],
 
         initialize: function(opts) {
             // This View may apply to a single PanelModel or a list
             this.models = opts.models;
             var self = this;
             this.models.forEach(function(m){
-                self.listenTo(m, 'change:channels change:z_projection', self.render);
+                self.listenTo(m, 'change:z_projection', self.render);
             });
         },
 
         events: {
-            "click .channel-btn": "toggle_channel",
-            "click .dropdown-menu a": "pick_color",
             "click .show-rotation": "show_rotation",
             "click .z-projection": "z_projection",
         },
@@ -1553,62 +1552,6 @@
             } else {
                 $rc.find('.rotation-slider').slider("destroy");
             }
-        },
-
-        pick_color: function(e) {
-            var color = e.currentTarget.getAttribute('data-color'),
-                $colorbtn = $(e.currentTarget).parent().parent(),
-                oldcolor = $(e.currentTarget).attr('data-oldcolor'),
-                idx = $colorbtn.attr('data-index'),
-                self = this;
-
-            if (color == 'colorpicker') {
-                FigureColorPicker.show({
-                    'color': oldcolor,
-                    'success': function(newColor){
-                        // remove # from E.g. #ff00ff
-                        newColor = newColor.replace("#", "");
-                        self.set_color(idx, newColor);
-                    }
-                });
-            } else if (color == 'lutpicker') {
-                FigureLutPicker.show({
-                    success: function(lutName){
-                        // LUT names are handled same as color strings
-                        self.set_color(idx, lutName);
-                    }
-                });
-            } else {
-                this.set_color(idx, color);
-            }
-            return false;
-        },
-
-        set_color: function(idx, color) {
-            if (this.models) {
-                this.models.forEach(function(m){
-                    m.save_channel(idx, 'color', color);
-                });
-            }
-        },
-
-        toggle_channel: function(e) {
-            var idx = e.currentTarget.getAttribute('data-index');
-
-            if (this.model) {
-                this.model.toggle_channel(idx);
-            } else if (this.models) {
-                // 'flat' means that some panels have this channel on, some off
-                var flat = $(e.currentTarget).hasClass('ch-btn-flat');
-                this.models.forEach(function(m){
-                    if(flat) {
-                        m.toggle_channel(idx, true);
-                    } else {
-                        m.toggle_channel(idx);
-                    }
-                });
-            }
-            return false;
         },
 
         clear: function() {
@@ -1697,15 +1640,7 @@
                 // if all panels have sizeZ == 1, don't allow z_projection
                 z_projection_disabled = (sum_sizeZ === this.models.length);
 
-                if (!compatible) {
-                    json = [];
-                }
-                // Add LUT offsets
-                json = json.map(function(ch){
-                    ch.lutBgPos = FigureLutPicker.getLutBackgroundPosition(ch.color);
-                    return ch;
-                });
-                html = this.template({'channels':json,
+                html = this.template({
                     'z_projection_disabled': z_projection_disabled,
                     'rotation': rotation,
                     'z_projection': z_projection});
