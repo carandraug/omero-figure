@@ -1030,7 +1030,7 @@
 
             this.models.forEach(function(m){
                 self.listenTo(m,
-                    'change:width change:height change:channels change:zoom change:theZ change:theT change:rotation change:z_projection change:z_start change:z_end change:export_dpi',
+                    'change:width change:height change:channels change:zoom change:theZ change:theT change:rotation change:z_projection change:z_start change:z_end change:flip change:export_dpi',
                     self.render);
                 zoom_sum += m.get('zoom');
 
@@ -1221,7 +1221,7 @@
                 sizeT = this.models.getIfEqual('sizeT'),
                 deltaT = this.models.getDeltaTIfEqual(),
                 z_projection = this.models.allTrue('z_projection');
-            
+
             this.theT_avg = theT;
 
             if (wh <= 1) {
@@ -1232,7 +1232,7 @@
                 frame_h = this.full_size / wh;
             }
 
-            // Now get img src & positioning css for each panel, 
+            // Now get img src & positioning css for each panel,
             this.models.forEach(function(m){
                 var src = m.get_img_src(),
                     img_css = m.get_vp_img_css(m.get('zoom'), frame_w, frame_h, m.get('dx'), m.get('dy'));
@@ -1502,7 +1502,8 @@
             this.models = opts.models;
             var self = this;
             this.models.forEach(function(m){
-                self.listenTo(m, 'change:channels change:z_projection', self.render);
+                self.listenTo(m, 'change:channels change:z_projection change:flip',
+                              self.render);
             });
         },
 
@@ -1511,6 +1512,7 @@
             "click .dropdown-menu a": "pick_color",
             "click .show-rotation": "show_rotation",
             "click .z-projection": "z_projection",
+            "click .flip": "flip_panel",
         },
 
         z_projection:function(e) {
@@ -1524,6 +1526,13 @@
                     p = !m.get('z_projection');
                 }
                 m.set_z_projection(p);
+            });
+        },
+
+        flip_panel: function(e) {
+            var new_state = ! $(e.currentTarget).hasClass('active');
+            this.models.forEach(function(m){
+                m.set('flip', new_state);
             });
         },
 
@@ -1626,6 +1635,7 @@
                 rotation,
                 z_projection,
                 zp,
+                flipped,
                 self = this;
             if (this.models) {
 
@@ -1697,6 +1707,14 @@
                 // if all panels have sizeZ == 1, don't allow z_projection
                 z_projection_disabled = (sum_sizeZ === this.models.length);
 
+                // If any panel is unflipped we want the button to
+                // appear unpressed so that pressing a first time will
+                // flip all the unflipped panels, and pressing a
+                // second time will unflip all.
+                flipped = this.models.all(function(m){
+                    return m.get('flip');
+                });
+
                 if (!compatible) {
                     json = [];
                 }
@@ -1708,7 +1726,8 @@
                 html = this.template({'channels':json,
                     'z_projection_disabled': z_projection_disabled,
                     'rotation': rotation,
-                    'z_projection': z_projection});
+                    'z_projection': z_projection,
+                    'flipped' : flipped});
                 this.$el.html(html);
             }
             return this;

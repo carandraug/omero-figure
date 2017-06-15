@@ -15,6 +15,9 @@
             labels: [],
             deltaT: [],     // list of deltaTs (secs) for tIndexes of movie
             rotation: 0,
+            // Only one flip, left-to-right, because up-down can be
+            // done by rotating 90 degrees and then flip.
+            flip: false,
             selected: false,
             pixel_size_x_symbol: '\xB5m',     // microns by default
             pixel_size_x_unit: 'MICROMETER',
@@ -290,7 +293,7 @@
         },
 
         create_labels_from_time: function(options) {
-            
+
             this.add_labels([{
                     'time': options.format,
                     'size': options.size,
@@ -401,7 +404,7 @@
             }
         },
 
-        // When a multi-select rectangle is drawn around several Panels
+        // when a multi-select rectangle is drawn around several Panels
         // a resize of the rectangle x1, y1, w1, h1 => x2, y2, w2, h2
         // will resize the Panels within it in proportion.
         // This might be during a drag, or drag-stop (save=true)
@@ -604,14 +607,19 @@
                 }
             }
 
+            // Flipping in CSS is done by a negative scale transformation
+            var scaleX = this.get('flip') ? -1 : 1;
+
             var css = {'left':img_x,
                        'top':img_y,
                        'width':img_w,
                        'height':img_h,
                        '-webkit-transform-origin': transform_x + '% ' + transform_y + '%',
                        'transform-origin': transform_x + '% ' + transform_y + '%',
-                       '-webkit-transform': 'rotate(' + rotation + 'deg)',
+                       '-webkit-transform': 'rotate(' + rotation + 'deg)'
+                                            + ' scaleX(' + scaleX + ')',
                        'transform': 'rotate(' + rotation + 'deg)'
+                                    + ' scaleX(' + scaleX + ')',
                    };
             return css;
         },
