@@ -1086,7 +1086,7 @@
             var dx = event.clientX - this.dragstart_x,
                 dy = event.clientY - this.dragstart_y;
             if (this.r !== 0) {
-                var xy = this.correct_rotation(dx, dy, this.r);
+                var xy = this.correct_rotation(dx, dy);
                 dx = xy.dx;
                 dy = xy.dy;
             }
@@ -1100,7 +1100,7 @@
                 var dx = event.clientX - this.dragstart_x,
                     dy = event.clientY - this.dragstart_y;
                 if (this.r !== 0) {
-                    var xy = this.correct_rotation(dx, dy, this.r);
+                    var xy = this.correct_rotation(dx, dy);
                     dx = xy.dx;
                     dy = xy.dy;
                 }
@@ -1110,7 +1110,7 @@
         },
 
         // if the panel is rotated by css, drag events need to be corrected
-        correct_rotation: function(dx, dy, rotation) {
+        correct_rotation: function(dx, dy) {
             if (dx === 0 && dy === 0) {
                 return {'dx': dx, 'dy': dy};
             }
